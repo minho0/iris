@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Robot UI Docker Shell
+Comment=Open IRIS Docker shell
+Exec=/usr/bin/gnome-terminal -- /home/thor/ui_ws/iris/launch-docker-shell.sh
+Icon=utilities-terminal
+Terminal=false
+Categories=Development;
+StartupNotify=true

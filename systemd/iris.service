@@ -1,0 +1,32 @@
+[Unit]
+Description=IRIS (RoboCup @Home)
+After=graphical.target network-online.target
+Wants=graphical.target
+
+[Service]
+Type=simple
+# ─── EDIT THESE ────────────────────────────────────────────
+User=robocup
+Group=robocup
+WorkingDirectory=/home/robocup/iris
+ExecStart=/home/robocup/iris/run.sh
+# ───────────────────────────────────────────────────────────
+
+# X display the Chromium window runs on
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/robocup/.Xauthority
+
+# Restart if it dies (e.g. chromium crash)
+Restart=on-failure
+RestartSec=5
+
+# Let the whole process group die cleanly
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutStopSec=15
+
+StandardOutput=append:/var/log/iris.log
+StandardError=append:/var/log/iris.log
+
+[Install]
+WantedBy=graphical.target

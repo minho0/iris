@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Robot UI Dev
+Comment=Run IRIS and open browser window
+Exec=/home/thor/ui_ws/iris/launch-dev-ui.sh
+Icon=web-browser
+Terminal=false
+Categories=Development;
+StartupNotify=true

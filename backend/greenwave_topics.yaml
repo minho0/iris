@@ -1,0 +1,9 @@
+topics:
+  - /scan
+  - /odom
+  - /color/image_raw
+  - /depth/image_raw
+  - /tf
+  - /joint_states
+
+stale_after_sec: 3.0

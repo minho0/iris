@@ -1,0 +1,21 @@
+node_modules/
+build/
+.svelte-kit/
+dist/
+
+# Runtime
+logs/
+.chrome-profile/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+.DS_Store

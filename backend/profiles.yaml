@@ -1,0 +1,205 @@
+# Launch profiles — edit `command` to match your setup.
+#
+# The backend runs each command as a subprocess in its own process group
+# so Ctrl+C / stop actions cleanly kill the entire roslaunch tree.
+#
+# Tips:
+#   - Prefer `ros2 launch` with a specific package + file over `bash -c` chains.
+#   - Source your workspace in run.sh (not here) so the env is inherited.
+#   - If you need to pass launch args, just append them:
+#       ros2 launch my_pkg main.launch.py use_sim_time:=false namespace:=robot1
+
+profiles:
+  timesync:
+    # 헤드리스 — 별도 창 안 뜸. zellij 시각화 빠진 ptp4l + phc2sys.
+    # offset 값은 backend log buffer로 흘러감 (1초 간격).
+    # thor 사용자 기준 sudo 불필요.
+    command: "/bin/bash /home/thor/inha_scripts/default/timesync_headless.sh"
+    description: "PTP time sync (THOR master ↔ ORIN slave)"
+
+  bag_record:
+    command: "/bin/bash /home/thor/inha_scripts/default/bag_record_headless.sh"
+    description: "Remote rosbag recorder for BT mission runs"
+    stop_grace_sec: 40.0
+    stop_term_sec: 8.0
+
+  bringup_common:
+    command: "/bin/bash /home/thor/inha_scripts/default/bringup_with_common_headless.sh"
+    description: "Common robot bringup stack"
+    strict_stop: true
+    stop_grace_sec: 20.0
+    stop_term_sec: 6.0
+
+  head:
+    command: "/bin/bash /home/thor/inha_scripts/default/head_control_headless.sh"
+    description: "Head control stack"
+
+  vlm:
+    command: "/bin/bash /home/thor/inha_scripts/hri/vlm_headless.sh"
+    description: "VLM perception stack"
+
+  subtask_generator:
+    command: "/bin/bash /home/thor/inha_scripts/hri/subtask_generator_headless.sh"
+    description: "RDMM GPSR subtask generator"
+
+  sound:
+    command: "/bin/bash /home/thor/inha_scripts/hri/sound_headless.sh"
+    description: "Microphone + speaker HRI stack"
+  
+  detection_inha:
+    command: "/bin/bash /home/thor/inha_scripts/perception/inha_detection_headless.sh"
+    description: "Yolo26E + SAM2 stack"
+
+  face:
+    command: "/bin/bash /home/thor/inha_scripts/hri/face_headless.sh"
+    description: "Face landmark HRI stack"
+
+  human_following:
+    command: "/bin/bash /home/thor/inha_scripts/hri/human_following_headless.sh"
+    description: "Human following stack"
+
+  nav2:
+    command: "/bin/bash /home/thor/inha_scripts/nav/nav2_headless.sh"
+    description: "Nav2 navigation stack"
+
+  nav2_hri:
+    command: "/bin/bash /home/thor/inha_scripts/nav/nav2_hri_headless.sh"
+    description: "Nav2 HRI navigation stack"
+  
+  align_to_map:
+    command: "/bin/bash /home/thor/inha_scripts/nav/align_to_map_headless.sh"
+    description: "Align to Original Nav2 Goal"
+
+  triple_camera:
+    command: "/bin/bash /home/thor/inha_scripts/default/triple_camera_headless.sh"
+    description: "Triple camera pipeline"
+
+  triple_camera_points:
+    command: "/bin/bash /home/thor/inha_scripts/default/triple_camera_with_points_headless.sh"
+    description: "Triple camera + points pipeline"
+
+  manipulation:
+    command: "/bin/bash /home/thor/inha_scripts/manip/manipulation_headless.sh"
+    description: "Manipulation stack"
+
+  safe_joint_move:
+    command: "/bin/bash /home/thor/inha_scripts/manip/safe_joint_move_headless.sh"
+    description: "Safe joint movement script"
+
+  align_to_person:
+    command: "/bin/bash /home/thor/inha_scripts/nav/align_to_person_headless.sh"
+    description: "Person alignment navigation"
+
+  close_approach:
+    command: "/bin/bash /home/thor/inha_scripts/nav/close_approach_headless.sh"
+    description: "Close approach navigation"
+
+  mani_detection:
+    command: "/bin/bash /home/thor/inha_scripts/perception/mani_detection_headless.sh"
+    description: "Manipulation detection pipeline"
+
+  gdino_trt:
+    command: "/bin/bash /home/thor/inha_scripts/perception/gdino_trt_headless.sh"
+    description: "Grounding DINO TRT detection pipeline"
+
+  gesture_detector:
+    command: "/bin/bash /home/thor/inha_scripts/perception/gesture_detector_headless.sh"
+    description: "Gesture detection pipeline"
+
+  posture_detector:
+    command: "/bin/bash /home/thor/inha_scripts/perception/posture_detector_headless.sh"
+    description: "Posture detection pipeline"
+
+  camera_only_head:
+    command: "/bin/bash /home/thor/inha_scripts/option/camera_only_head_headless.sh"
+    description: "Head camera only pipeline"
+
+  world_odom_tf:
+    command: "/bin/bash /home/thor/inha_scripts/option/world_odom_tf_headless.sh"
+    description: "World ↔ odom TF publisher"
+
+  bell_detector:
+    command: "/bin/bash /home/thor/inha_scripts/hri/bell_detector_headless.sh"
+    description: "Bell detector HRI pipeline"
+
+  find_empty_seat:
+    command: "/bin/bash /home/thor/inha_scripts/perception/find_empty_seat_headless.sh"
+    description: "Find Empty Seat for Greeting Guest at HRI"
+
+  table_person_associate:
+    command: "/bin/bash /home/thor/inha_scripts/perception/table_person_associate_headless.sh"
+    description: "Table ↔ person association pipeline"
+
+  find_start_bar:
+    command: "/bin/bash /home/thor/inha_scripts/perception/find_start_bar_headless.sh"
+    description: "Find start bar"
+
+  nav2_restaurant:
+    command: "/bin/bash /home/thor/inha_scripts/nav/nav2_restaurant_headless.sh"
+    description: "Nav2 restaurant navigation stack"
+
+  approach_mapping:
+    command: "/bin/bash /home/thor/inha_scripts/mapping/approach_mapping_headless.sh"
+    description: "Approach mapping pipeline"
+
+  approach_icp:
+    command: "/bin/bash /home/thor/inha_scripts/perception/approach_icp_headless.sh"
+    description: "Approach ICP perception pipeline"
+
+  local_search:
+    command: "/bin/bash /home/thor/inha_scripts/perception/local_search_headless.sh"
+    description: "Local search perception pipeline"
+
+  world_map_tf:
+    command: "/bin/bash /home/thor/inha_scripts/option/world_map_tf_headless.sh"
+    description: "World ↔ map TF publisher"
+
+  topic_receive_check:
+    command: "python3 /home/thor/ui_ws/iris/backend/scripts/topic_receive_check.py --json-lines"
+    description: "Subscribe to scan/camera/livox topics and report receive rate/delay"
+
+  speak_test:
+    command: "/bin/bash /home/thor/inha_scripts/test/speak_test.sh"
+    description: "Speak test script"
+    allow_quick_exit: true
+
+  audio_defaults:
+    command: "/bin/bash /home/thor/inha_scripts/hri/audio_default_setup.sh"
+    description: "Set default microphone and speaker devices"
+    allow_quick_exit: true
+
+  bt_hri:
+    command: "/bin/bash /home/thor/ui_ws/iris/backend/bt_scripts/hri_dryrun.sh"
+    description: "HRI dryrun behavior tree"
+
+  bt_pickandplace:
+    command: "/bin/bash /home/thor/ui_ws/iris/backend/bt_scripts/pickandplace_dryrun.sh"
+    description: "Pick and Place dryrun behavior tree"
+
+  bt_restaurant:
+    command: "/bin/bash /home/thor/ui_ws/iris/backend/bt_scripts/restaurant_dryrun.sh"
+    description: "Restaurant dryrun behavior tree"
+
+  bt_gpsr:
+    command: "/bin/bash /home/thor/ui_ws/iris/backend/bt_scripts/gpsr_dryrun.sh"
+    description: "GPSR dryrun behavior tree"
+
+  bt_laundry:
+    command: "/bin/bash /home/thor/ui_ws/iris/backend/bt_scripts/laundry_dryrun.sh"
+    description: "Laundry dryrun behavior tree"
+
+  bt_final:
+    command: "/bin/bash /home/thor/ui_ws/iris/backend/bt_scripts/final_dryrun.sh"
+    description: "Final dryrun behavior tree"
+
+  competition:
+    command: "ros2 launch robot_bringup competition.launch.py"
+    description: "Full stack for the RoboCup run"
+
+  debug:
+    command: "ros2 launch robot_bringup debug.launch.py rviz:=true verbose:=true"
+    description: "Debug build with RViz and verbose logging"
+
+  place:
+      command: "/bin/bash /home/thor/inha_scripts/manip/place_headless.sh"
+      description: "Place"
