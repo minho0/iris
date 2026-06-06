@@ -126,21 +126,21 @@
 
   /* ── Text mode ── */
   .text-panel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-  }
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  } 
 
   .message {
-    max-width: 14ch;
-    color: var(--text-0);
-    font-size: clamp(72px, 9vw, 150px);
-    font-weight: 700;
-    line-height: 1.08;
-    letter-spacing: 0;
-    text-align: center;
-    word-break: keep-all;
+  max-width: 90%;
+  max-height: 100%;
+  font-size: clamp(32px, 7vmin, 120px);
+  line-height: 1.08;
+  text-align: center;
+
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  overflow: hidden;
   }
 
   /* ── GPSR task list mode ── */
@@ -149,7 +149,6 @@
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    width: 100%;
     max-width: 640px;
   }
 
@@ -192,11 +191,13 @@
 
   /* ── Face image (shared) ── */
   .face {
-    width: clamp(80px, 15vw, 160px);
-    height: clamp(80px, 15vw, 160px);
-    object-fit: cover;
-    border-radius: 50%;
-    border: 3px solid var(--border-2);
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 0;
+    border: none;
   }
 
   .listen {
