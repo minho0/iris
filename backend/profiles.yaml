@@ -42,9 +42,9 @@ profiles:
     command: "/bin/bash /home/thor/inha_scripts/hri/subtask_generator_headless.sh"
     description: "RDMM GPSR subtask generator"
 
-  sound:
-    command: "/bin/bash /home/thor/inha_scripts/hri/sound_headless.sh"
-    description: "Microphone + speaker HRI stack"
+  # sound:
+  #   command: "/bin/bash /home/thor/inha_scripts/hri/sound_headless.sh"
+  #   description: "Microphone + speaker HRI stack"
   
   detection_inha:
     command: "/bin/bash /home/thor/inha_scripts/perception/inha_detection_headless.sh"
@@ -203,3 +203,18 @@ profiles:
   place:
       command: "/bin/bash /home/thor/inha_scripts/manip/place_headless.sh"
       description: "Place"
+  
+  asr:
+    command: "/bin/bash /home/thor/inha_scripts/hri/asr_headless.sh"
+    description: "ASR listen action server"
+
+  speak:
+    command: "/bin/bash /home/thor/inha_scripts/hri/speak_headless.sh"
+    description: "TTS speak action server"
+
+  resolve_goal_pose:
+    command: "/bin/bash /home/thor/inha_scripts/nav/resolve_goal_pose_headless.sh"
+    description: "Resolve goal pose script"
+
+
+  

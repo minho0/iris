@@ -1,5 +1,5 @@
 <script>
-  import { config } from '$lib/ros.js';
+  import { config, startNextInstruction } from '$lib/ros.js';
   const apiUrl = config.apiUrl;
   export let running = false;
   export let text = 'Mission running';
@@ -7,17 +7,37 @@
   export let btStatePayload = null;
   export let btMessagePayload = null;
 
+  let nextInstructionBusy = false;
+  let nextInstructionError = '';
+
   $: active = btMessagePayload?.active ?? false;
   $: mode = active ? (btMessagePayload?.mode ?? 0) : 0;
   $: messageText = active ? String(btMessagePayload?.message ?? '').trim() : '';
   $: imagePath = active ? String(btMessagePayload?.image_path ?? '').trim() : '';
+  $: isNextInstructionMode = mode === 2;
+  $: nextInstructionLabel = messageText || 'Start Next Instruction';
   $: isListening = String(btStatePayload?.state ?? '').trim().toLowerCase() === 'listening';
 
   $: taskLines = mode === 1 && messageText
     ? messageText.split('\n').map(l => l.trim()).filter(Boolean)
     : [];
 
-  $: showLogo = !isListening && !messageText && !imagePath;
+  $: showLogo = !isListening && !messageText && !imagePath && !isNextInstructionMode;
+
+  async function handleStartNextInstruction() {
+    if (nextInstructionBusy) return;
+
+    nextInstructionBusy = true;
+    nextInstructionError = '';
+
+    try {
+      await startNextInstruction();
+    } catch (error) {
+      nextInstructionError = error?.message ?? 'Service call failed';
+    } finally {
+      nextInstructionBusy = false;
+    }
+  }
 </script>
 
 <section class="aid" class:embedded>
@@ -28,7 +48,25 @@
     </div>
 
     <div class="content">
-      {#if isListening}
+      {#if isNextInstructionMode}
+        <div class="next-panel">
+          {#if imagePath}
+            <img class="face" src="{apiUrl}/bt/message/image?t={Date.now()}" alt="face" />
+          {/if}
+          <button
+            type="button"
+            class="next-button"
+            disabled={nextInstructionBusy}
+            on:click={handleStartNextInstruction}
+          >
+            {nextInstructionBusy ? 'Sending' : nextInstructionLabel}
+          </button>
+          {#if nextInstructionError}
+            <div class="next-error">{nextInstructionError}</div>
+          {/if}
+        </div>
+
+      {:else if isListening}
         <img class="listen" src="/listen.png" alt="Listening" />
 
       {:else if showLogo}
@@ -141,6 +179,43 @@
   word-break: keep-all;
   overflow-wrap: anywhere;
   overflow: hidden;
+  }
+
+  .next-panel {
+    width: min(86%, 760px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .next-button {
+    width: 100%;
+    min-height: clamp(96px, 18vh, 180px);
+    padding: 20px 28px;
+    color: #ffffff;
+    background: var(--ok);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: var(--radius);
+    font-size: clamp(30px, 6vmin, 72px);
+    font-weight: 800;
+    line-height: 1.08;
+    text-align: center;
+    overflow-wrap: anywhere;
+    box-shadow: 0 18px 46px rgba(21, 128, 61, 0.24);
+  }
+
+  .next-button:disabled {
+    opacity: 0.68;
+  }
+
+  .next-error {
+    max-width: 100%;
+    color: var(--err);
+    font-size: clamp(14px, 2vmin, 20px);
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
   }
 
   /* ── GPSR task list mode ── */

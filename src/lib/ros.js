@@ -12,10 +12,16 @@ const browserHost =
     ? window.location.hostname
     : 'localhost';
 
+const env = import.meta.env ?? {};
+
 export const config = {
   rosbridgeUrl: `ws://${browserHost}:9090`,
   videoServerUrl: `http://${browserHost}:18081`,
-  apiUrl: `http://${browserHost}:8000`
+  apiUrl: `http://${browserHost}:8000`,
+  ServiceName:
+    env.VITE_START_NEXT_INSTRUCTION_SERVICE ?? '/bt/start_next_instruction',
+  startNextInstructionServiceType:
+    env.VITE_START_NEXT_INSTRUCTION_SERVICE_TYPE ?? 'inha_interfaces/srv/SetEnable'
 };
 
 // ────────────────────────────────────────────────────────
@@ -86,6 +92,21 @@ export function callService(name, serviceType, request) {
     const req = new ROSLIB.ServiceRequest(request);
     service.callService(req, resolve, reject);
   });
+}
+
+export async function startNextInstruction() {
+  const res = await fetch(`${config.apiUrl}/bt/start-next-instruction`, { method: 'POST' });
+
+  if (!res.ok) {
+    throw new Error(await extractDetail(res, `Start next instruction failed: ${res.status}`));
+  }
+
+  const response = await res.json();
+  if (response?.success === false) {
+    throw new Error(response.message || 'Start next instruction rejected');
+  }
+
+  return response;
 }
 
 /**
@@ -202,18 +223,23 @@ export async function fetchBtMessage() {
   return res.json();
 }
 
-export async function exitApplication() {
+export async function stopEveryNode() {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 1200);
+  const timeout = setTimeout(() => controller.abort(), 70000);
 
   try {
-    const res = await fetch(`${config.apiUrl}/app/exit`, {
+    const res = await fetch(`${config.apiUrl}/stop-every-node`, {
       method: 'POST',
       signal: controller.signal
     });
 
-    if (!res.ok) throw new Error(`Exit failed: ${res.status}`);
-    return res.json();
+    if (!res.ok) throw new Error(await extractDetail(res, `Stop every node failed: ${res.status}`));
+
+    const payload = await res.json();
+    if (payload?.errors && Object.keys(payload.errors).length > 0) {
+      throw new Error(`Stop every node partially failed: ${Object.keys(payload.errors).join(', ')}`);
+    }
+    return payload;
   } finally {
     clearTimeout(timeout);
   }

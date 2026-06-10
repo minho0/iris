@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { connectionState, clock } from '$lib/ros.js';
-  import ExitButton from '$lib/common/ExitButton.svelte';
+  import StopEveryNodeButton from '$lib/common/StopEveryNodeButton.svelte';
 
   let vpW = 0;
   let vpH = 0;
@@ -36,7 +36,7 @@
     <span class="dot {statusClass}"></span>
     <span class="vp mono">{vpW}×{vpH} @ {dpr}x</span>
     <span class="time mono">{fmt($clock)}</span>
-    <ExitButton />
+    <StopEveryNodeButton />
   </div>
 </header>
 

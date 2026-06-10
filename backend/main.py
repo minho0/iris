@@ -37,7 +37,7 @@ try:
     from rclpy.node import Node
     from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
     from std_msgs.msg import String as StdString
-    from inha_interfaces.srv import UiCommand
+    from inha_interfaces.srv import SetEnable, UiCommand
 except ImportError:
     rclpy = None
     DiagnosticArray = None
@@ -50,6 +50,7 @@ except ImportError:
     QoSProfile = None
     ReliabilityPolicy = None
     StdString = None
+    SetEnable = None
     UiCommand = None
 
 # ─────────────────────────────────────────────────────────────
@@ -995,12 +996,35 @@ class ProcessManager:
             )
         return {"status": "stopped"}
 
-    async def stop_all(self):
-        for name in list(self.managed.keys()):
+    async def stop_all(self, exclude: Optional[set[str]] = None) -> dict:
+        excluded = set(exclude or [])
+        stopped = {}
+        errors = {}
+        targets = [
+            name
+            for name, mp in self.managed.items()
+            if name not in excluded and mp.running
+        ]
+
+        async def stop_one(name: str):
             try:
-                await self.stop(name)
+                return name, await self.stop(name), None
             except Exception as e:
                 print(f"[stop_all] {name}: {e}")
+                return name, None, str(e)
+
+        for name, result, error in await asyncio.gather(*(stop_one(name) for name in targets)):
+            if error:
+                errors[name] = error
+            else:
+                stopped[name] = result
+
+        return {
+            "status": "partial" if errors else "stopped",
+            "excluded": sorted(excluded),
+            "stopped": stopped,
+            "errors": errors,
+        }
 
     async def _pump_logs(self, mp: ManagedProcess):
         """Read subprocess output line by line, buffer + fan out to WS."""
@@ -1242,6 +1266,49 @@ def stop_bt_bridges_if_idle():
         bt_message_service.stop()
 
 
+def call_start_next_instruction_service(timeout_sec: float = 3.0) -> dict:
+    if not all([rclpy is not None, Context is not None, Node is not None, SetEnable is not None]):
+        raise RuntimeError("rclpy or inha_interfaces.srv.SetEnable is not available")
+
+    context = Context()
+    node = None
+
+    try:
+        rclpy.init(args=None, context=context)
+        node = Node("iris_start_next_instruction_client", context=context)
+        client = node.create_client(SetEnable, "/bt/start_next_instruction")
+
+        if not client.wait_for_service(timeout_sec=timeout_sec):
+            raise TimeoutError("/bt/start_next_instruction service is not available")
+
+        request = SetEnable.Request()
+        request.enable = True
+        future = client.call_async(request)
+        rclpy.spin_until_future_complete(node, future, timeout_sec=timeout_sec)
+
+        if not future.done():
+            raise TimeoutError("/bt/start_next_instruction service call timed out")
+
+        response = future.result()
+        if response is None:
+            raise RuntimeError("/bt/start_next_instruction returned no response")
+
+        success = bool(getattr(response, "success", True))
+        message = str(getattr(response, "message", ""))
+        return {"success": success, "message": message}
+    finally:
+        if node is not None:
+            try:
+                node.destroy_node()
+            except Exception:
+                pass
+        try:
+            if context.ok():
+                context.shutdown()
+        except Exception:
+            pass
+
+
 @app.get("/")
 async def root():
     return {"service": "iris-launcher", "profiles": list(profiles.keys())}
@@ -1290,6 +1357,22 @@ async def bt_state():
 async def bt_message():
     start_bt_bridges_if_needed()
     return bt_message_service.payload()
+
+
+@app.post("/bt/start-next-instruction")
+async def start_next_instruction():
+    try:
+        payload = await asyncio.to_thread(call_start_next_instruction_service)
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if payload.get("success") is False:
+        raise HTTPException(status_code=409, detail=payload.get("message") or "Start next instruction rejected")
+
+    return payload
+
 
 from fastapi.responses import FileResponse
 
@@ -1373,6 +1456,13 @@ async def stop(profile: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/stop-every-node")
+async def stop_every_node():
+    result = await manager.stop_all(exclude={"timesync"})
+    stop_bt_bridges_if_idle()
+    return result
+
+
 @app.post("/pose/{name}")
 async def goto_pose(name: str):
     if name not in POSE_NAMES:
@@ -1421,23 +1511,6 @@ async def save_profile_log(profile: str):
             f.write(entry["line"] + "\n")
 
     return {"path": str(save_path), "lines": len(entries)}
-
-
-def _terminate_process_group():
-    try:
-        os.killpg(os.getpgid(os.getpid()), signal.SIGTERM)
-    except ProcessLookupError:
-        try:
-            os.kill(os.getpid(), signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-
-
-@app.post("/app/exit")
-async def exit_app():
-    loop = asyncio.get_running_loop()
-    loop.call_later(0.2, _terminate_process_group)
-    return {"status": "exiting"}
 
 
 @app.websocket("/ws/logs/{profile}")

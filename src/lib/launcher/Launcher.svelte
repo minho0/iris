@@ -64,11 +64,18 @@
       status: 'down'
     },
     {
-      id: 'sound',
-      name: 'Sound',
-      desc: 'Mic · speaker · whisper · TTS',
+      id: 'asr',
+      name: 'ASR',
+      desc: 'ASR listen action server',
       group: 'mission',
-      missions: standardMissionIds,
+      missions: ['hri', 'gpsr', 'restaurant'],
+      status: 'down'
+    },
+    {
+      id: 'speak',
+      name: 'Speak',
+      desc: 'TTS speak action server',
+      group: 'default',
       status: 'down'
     },
     {
@@ -209,7 +216,7 @@
       name: 'Posture Detector',
       desc: 'Posture perception pipeline',
       group: 'mission',
-      missions: [],
+      missions: ['gpsr'],
       status: 'down'
     },
     {
@@ -249,7 +256,7 @@
       name: 'Find Start Bar',
       desc: 'Find Start Bar from initial pose',
       group: 'mission',
-      missions: ['restaurant'],
+      missions: nonHriMissionIds,
       status: 'down'
     },
     {
@@ -266,7 +273,7 @@
       name: 'Approach Mapping',
       desc: 'Approach mapping pipeline',
       group: 'mission',
-      missions: ['pp', 'restaurant'],
+      missions: ['pp', 'restaurant', 'gpsr'],
       status: 'down'
     },
     {
@@ -338,6 +345,15 @@
       desc: 'Place Object',
       group: 'mission',
       missions: nonHriMissionIds,
+      status: 'down'
+    },
+
+    {
+      id: 'resolve_goal_pose',
+      name: 'Resolve Goal Pose',
+      desc: 'Resolve goal pose for guest at occupancy space',
+      group: 'mission',
+      missions: ['restaurant', 'pp'],
       status: 'down'
     },
 
@@ -1113,7 +1129,10 @@
     const nodeTimer = setInterval(refreshRosNodes, 1500);
     const topicStatusTimer = setInterval(refreshTopicCheckStatus, 1500);
     const topicLogTimer = setInterval(refreshTopicCheckLogs, 1000);
+    const refreshHandler = () => refreshManagedProfiles();
+    window.addEventListener('iris:profiles-refresh', refreshHandler);
     return () => {
+      window.removeEventListener('iris:profiles-refresh', refreshHandler);
       closeLogSocket();
       stopLogPolling();
       clearInterval(statusTimer);
